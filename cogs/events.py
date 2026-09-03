@@ -81,12 +81,6 @@ class Events(commands.Cog):
         # 6. Custom commands (prefix-based, alias system)
         await self._run_custom_command(message)
 
-        # 7. Groq chatbot — mention or #ai-chat
-        if (self.bot.user in message.mentions or
-                (hasattr(message.channel, 'name') and
-                 message.channel.name.lower() == "ai-chat")):
-            await self._groq_respond(message)
-
     # ── Custom command runner ─────────────────────────────────
     async def _run_custom_command(self, message: discord.Message):
         prefix = self.bot.prefix_cache.get(message.guild.id)
@@ -140,25 +134,6 @@ class Events(commands.Cog):
             new_ctx = await self.bot.get_context(ctx.message)
             if new_ctx.valid:
                 await self.bot.invoke(new_ctx)
-
-    # ── Groq response ─────────────────────────────────────────
-    async def _groq_respond(self, message: discord.Message):
-        fun_cog = self.bot.cogs.get("Fun")
-        if not fun_cog:
-            return
-        async with message.channel.typing():
-            try:
-                reply = await asyncio.to_thread(
-                    fun_cog.get_groq_response_fn,
-                    message.author.id,
-                    message.content
-                )
-                e = discord.Embed(description=reply[:4096], color=0x5865F2)
-                e.set_footer(text=f"Asked by {message.author.display_name}")
-                await message.reply(embed=e, mention_author=False)
-            except Exception as ex:
-                print(f"Groq on_message error: {ex}")
-                await message.reply("brain broke for a sec, try again")
 
     # ── Snipe cache ───────────────────────────────────────────
     @commands.Cog.listener()
@@ -469,8 +444,8 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
         """Log bans that happen outside the bot (manual bans)."""
-        await asyncio.sleep(1)  # give audit log time to update
         try:
+            await asyncio.sleep(1)  # give audit log time to update
             async for entry in guild.audit_logs(
                 limit=1, action=discord.AuditLogAction.ban
             ):
@@ -486,7 +461,7 @@ class Events(commands.Cog):
                     e.add_field(name="Reason", value=entry.reason or "None", inline=False)
                     await self._send_log(guild.id, 'log_mod_id', e)
                     break
-        except (discord.Forbidden, Exception):
+        except Exception:
             pass
 
     @commands.Cog.listener()

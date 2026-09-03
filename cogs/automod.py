@@ -1,4 +1,5 @@
 # cogs/automod.py — word filter + configurable actions
+import re
 from datetime import datetime, timedelta, timezone
 
 import discord
@@ -31,7 +32,8 @@ class AutoMod(commands.Cog):
             return False
         words   = await self._get_words(message.guild.id)
         content = message.content.lower()
-        if not any(w in content for w in words):
+        # Word-boundary match so "ass" does not flag "class" or "grass".
+        if not any(re.search(rf"\b{re.escape(w)}\b", content) for w in words):
             return False
 
         try:
@@ -69,6 +71,8 @@ class AutoMod(commands.Cog):
             minutes = int(await get_setting(message.guild.id, 'automod_mute_minutes') or 10)
             try:
                 member = await fetch_member(self.bot, message.guild.id, message.author.id)
+                if member is None:
+                    return True
                 until  = datetime.now(timezone.utc) + timedelta(minutes=minutes)
                 await member.edit(timed_out_until=until, reason="Automod: filtered word")
                 await log_action(self.bot, f"Automod Mute ({minutes}min)",
@@ -153,7 +157,7 @@ class AutoMod(commands.Cog):
     @automod.command(name="setwarnexpiry", description="Warn expiry for automod warns e.g. 7d")
     @app_commands.default_permissions(administrator=True)
     async def setwarnexpiry(self, i: discord.Interaction, duration: str):
-        if not parse_duration(duration):
+        if parse_duration(duration) is None:
             await i.response.send_message(
                 "❌ Invalid format. Use e.g. `7d`, `24h`, `30m`.", ephemeral=True); return
         await set_setting(i.guild.id, 'automod_warn_expiry', duration)

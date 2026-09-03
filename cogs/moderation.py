@@ -290,6 +290,9 @@ class Moderation(commands.Cog):
                          member: discord.Member, minutes: int, reason: str = None):
         await i.response.defer()
         member = await fetch_member(self.bot, i.guild_id, member.id)
+        if member is None:
+            await i.followup.send("❌ That member is no longer in the server.", ephemeral=True)
+            return
         until  = datetime.now(timezone.utc) + timedelta(minutes=minutes)
         await member.edit(timed_out_until=until, reason=reason)
         await log_action(self.bot, f"Mute {minutes}min", member, i.user, reason, i.guild_id)
@@ -321,6 +324,9 @@ class Moderation(commands.Cog):
     async def slash_unmute(self, i: discord.Interaction, member: discord.Member):
         await i.response.defer()
         member = await fetch_member(self.bot, i.guild_id, member.id)
+        if member is None:
+            await i.followup.send("❌ That member is no longer in the server.", ephemeral=True)
+            return
         await member.edit(timed_out_until=None)
         async with aiosqlite.connect(DB) as db:
             await db.execute(
@@ -635,6 +641,9 @@ class Moderation(commands.Cog):
             await ctx.reply("❌ Specify duration in minutes e.g. `?mute @user 10`"); return
         proof = await get_proof(ctx)
         target = await fetch_member(self.bot, ctx.guild.id, target.id)
+        if target is None:
+            await ctx.reply("❌ That member is no longer in the server.")
+            return
         until  = datetime.now(timezone.utc) + timedelta(minutes=minutes)
         await target.edit(timed_out_until=until, reason=reason)
         async with aiosqlite.connect(DB) as db:
@@ -664,6 +673,9 @@ class Moderation(commands.Cog):
         if not target:
             await ctx.reply("❌ Specify a member or reply to their message."); return
         target = await fetch_member(self.bot, ctx.guild.id, target.id)
+        if target is None:
+            await ctx.reply("❌ That member is no longer in the server.")
+            return
         await target.edit(timed_out_until=None)
         async with aiosqlite.connect(DB) as db:
             await db.execute(
