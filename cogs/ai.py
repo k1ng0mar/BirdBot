@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from cogs.utils import check_cooldown, get_setting, set_cooldown_ts
 
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "qwen/qwen3.8-27b"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 SYSTEM_PROMPT = (
