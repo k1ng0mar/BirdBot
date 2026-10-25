@@ -224,6 +224,7 @@ class Bird(commands.Bot):
             "cogs.info",
             "cogs.automod",
             "cogs.triggers",
+            "cogs.manual",
             "cogs.ai",
             "cogs.events",
         ]

@@ -147,7 +147,7 @@ class Info(commands.Cog):
         e.add_field(name="🤖 AI Chat", inline=False, value=
             f"Mention me or chat in `#ai-chat` and I'll respond.\n"
             f"`/ask <message>` · `/roast @member` · `/topic` · `/deadchat`\n"
-            f"Powered by Groq llama-3.3-70b. Mostly mean, sometimes nice.")
+            f"Ask me how something works and I'll explain it.")
 
         e.add_field(name="🎉 Fun", inline=False, value=
             f"`meme` · `roast <target>` · `8ball <q>` · `deadchat`\n"
@@ -168,7 +168,8 @@ class Info(commands.Cog):
             f"Reaches threshold → auto-posted with author ping + jump link.")
 
         e.add_field(name="ℹ️ Info", inline=False, value=
-            f"`userinfo [@member]` · `serverinfo` · `ping`")
+            f"`userinfo [@member]` · `serverinfo` · `ping`\n"
+            f"`/manual <topic>` for how anything works · `/manualindex` for the list")
 
         e.add_field(name="💡 Tips", inline=False, value=
             f"• Reply to a message before `{prefix}warn/kick/ban/mute` to auto-attach proof\n"

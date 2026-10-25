@@ -74,13 +74,26 @@ class AI(commands.Cog):
             print(f"Groq error: {ex}")
             return None
 
-    async def chat(self, user_id: int, user_msg: str) -> str | None:
-        """Continue a conversation with one user, keeping history."""
+    async def chat(self, user_id: int, user_msg: str,
+                   extra_context: str | None = None) -> str | None:
+        """Continue a conversation with one user, keeping history.
+
+        extra_context is injected as a one-off system note, so the bot can quote
+        the manual without it polluting the stored history.
+        """
         hist = _history.setdefault(user_id, [])
         hist.append({"role": "user", "content": user_msg})
         if len(hist) > _MAX_HISTORY:
             hist[:] = hist[-_MAX_HISTORY:]
-        reply = await self._call([{"role": "system", "content": SYSTEM_PROMPT}] + hist)
+        system = SYSTEM_PROMPT
+        if extra_context:
+            system += (
+                "\n\nREFERENCE (the bot's own manual). The user asked about the bot, so "
+                "answer from this. Name the exact command. Never invent a command, "
+                "setting, or option that is not in here. If the answer is not in the "
+                "reference, say you do not know rather than guessing. Stay in character, "
+                "but the command names must be exactly right.\n\n" + extra_context)
+        reply = await self._call([{"role": "system", "content": system}] + hist)
         if reply is None:
             return None
         hist.append({"role": "assistant", "content": reply})
@@ -134,8 +147,17 @@ class AI(commands.Cog):
         if not text:
             return
 
+        # If the manual covers this, inject it so the brain quotes real commands
+        # instead of inventing them.
+        extra = None
         try:
-            reply = await self.chat(message.author.id, text)
+            from cogs.manual import build_context
+            extra = await build_context(message.guild, text)
+        except Exception as ex:
+            print(f"manual lookup error: {ex}")
+
+        try:
+            reply = await self.chat(message.author.id, text, extra)
         except Exception as ex:
             print(f"AI respond error: {ex}")
             return
