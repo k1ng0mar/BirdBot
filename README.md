@@ -1,6 +1,6 @@
 # That One Bird 🐦
 
-Discord mod bot for any server. Moderation plus everyday utilities. Runs on discord.py with a local SQLite file.
+Discord mod bot for any server. Moderation plus everyday utilities plus an AI brain. Runs on discord.py with a local SQLite file.
 
 Every command works as `/slash` and `?prefix`.
 
@@ -18,7 +18,7 @@ On Render and similar hosts the bot binds a small keep alive web server to `$POR
 
 ## What it does
 
-* Moderation: warn, unwarn, clearwarns, warns, history, modlogs, mute and unmute with a DM when the mute ends, kick, ban, tempban with auto unban, jail and unjail, purge, nick, slowmode, lookup by user id. Reply to a message when you run a command and it targets that author and attaches the message as proof.
+* Moderation: warn, unwarn, clearwarns, warns, history, modlogs, mute and unmute with a DM when the mute ends, kick, ban, unban by ID, tempban with auto unban, jail and unjail, purge, nick, slowmode, lookup by user id. Reply to a message when you run a command and it targets that author and attaches the message as proof.
 * Warn thresholds: `/setwarnthreshold kick 3` and it kicks at 3 warns. Set ban and mute the same way.
 * Automod: word filter. Actions are delete only, warn, or mute. Word list plus mute length plus warn expiry, all per server.
 * Anti raid: too many joins in a few seconds triggers slowmode, lockdown, or kick new. Toggle plus limits in settings.
@@ -27,7 +27,9 @@ On Render and similar hosts the bot binds a small keep alive web server to `$POR
 * Welcome: channel plus message with `{user}` `{name}` `{server}` `{count}` placeholders. Autorole on join. Jail channel plus role. Starboard with emoji plus threshold. Deadchat pings.
 * Triggers: auto replies with text, image, or gif. Match on contains or startswith.
 * Custom commands: `/addcommand <name> <message|ping|alias> <value>`. Alias runs another command. Per server cooldowns. Per command permissions plus display mode public, ephemeral, or timed.
-* Fun and utils: meme, roast, 8ball, poll, remind, snipe, afk with auto clear and ping notices, topic, coinflip, dice, calc, urban dictionary, firstmessage, hug, slap, bite, punch, kick, avatar, banner, servericon, quote image from a reply, say, announce, pingrole, bookmarks with 🔖 plus `mybookmarks`.
+* AI Chat: Groq powered brain (llama-3.3-70b). Mention the bot or talk in `#ai-chat` and it responds. Mostly mean, sometimes nice. Commands: `/ask`, `/roast @member`, `/topic`, `/deadchat`. Requires `GROQ_API_KEY` in `.env`.
+* Fun and utils: meme, roast, 8ball, poll, remind, snipe, esnipe (edit snipe with before/after), afk with auto clear and ping notices, topic, coinflip, dice, calc, urban dictionary, firstmessage, hug, slap, bite, punch, kick, avatar, banner, servericon, quote image from a reply, say, announce, pingrole, bookmarks with 🔖 plus `mybookmarks`, steal emoji from other servers.
+* Animal pics: cat, dog, fox, duck, panda, bunny, koala, bird, hamster, raccoon.
 * Info: userinfo, serverinfo, ping, help.
 
 ## Admin quick start
@@ -52,9 +54,12 @@ On Render and similar hosts the bot binds a small keep alive web server to `$POR
 
 * `TOKEN`: Discord bot token. Required.
 * `PREFIX`: Default prefix. Optional, `?` when empty.
+* `GROQ_API_KEY`: Groq API key for the AI brain. Optional but needed for AI features.
+* `AI_CHAT_CHANNEL`: Channel name for AI chat. Optional, defaults to `ai-chat`.
 
 ## Notes
 
 * One `on_message` hub in `cogs/events.py`. Automod first, then triggers, then custom commands. No listener fights.
+* AI chat listens via a separate `on_message` in `cogs/ai.py` and only fires on mentions or in the AI channel.
 * Repeats like reminders, tempbans, and mute expiry run on background tasks.
 * Quote images fall back to a plain embed when fonts are missing.

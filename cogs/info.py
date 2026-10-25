@@ -108,7 +108,7 @@ class Info(commands.Cog):
             f"`/setup` · `/setprefix` · `/setlogchannel <mod|messages|members|server>`\n"
             f"`/setwelcome` · `/setautorole` · `/setjail` · `/setdeadchatrole` · `/setdeadchatperm`\n"
             f"`/setstarboard`\n"
-            f"`/setcooldown` · `/setpermission` · `/setdisplay <public|ephemeral|timed>`\n"
+            f"`/setcooldown` · `/setcommandperms` · `/setdisplay <public|ephemeral|timed>`\n"
             f"`/antiraidsettings` · `/antiraidtoggle` · `/setwarnthreshold <kick|ban|mute>`")
 
         e.add_field(name="🔨 Moderation (slash + prefix)", inline=False, value=
@@ -117,7 +117,7 @@ class Info(commands.Cog):
             f"`history [@member]` — all mod actions against a user\n"
             f"`modlogs @mod` — actions by a moderator\n"
             f"`mute [@member] <mins> [reason]` · `unmute [@member]`\n"
-            f"`kick [@member] [reason]` · `ban [@member] [reason]`\n"
+            f"`kick [@member] [reason]` · `ban [@member] [reason]` · `unban <user_id>`\n"
             f"`tempban [@member] <dur> [reason]` · `jail [@member]` · `unjail [@member]`\n"
             f"`purge <1-100>` · `nick [@member] [name]` · `slowmode <sec>`\n"
             f"`lookup <user_id>` — fetch any user by ID")
@@ -144,9 +144,14 @@ class Info(commands.Cog):
             + (("\n".join(f"  `{prefix}{n}` [{t}]" for n, t in custom[:6]))
                if custom else "  *None set yet*"))
 
+        e.add_field(name="🤖 AI Chat", inline=False, value=
+            f"Mention me or chat in `#ai-chat` and I'll respond.\n"
+            f"`/ask <message>` · `/roast @member` · `/topic` · `/deadchat`\n"
+            f"Powered by Groq llama-3.3-70b. Mostly mean, sometimes nice.")
+
         e.add_field(name="🎉 Fun", inline=False, value=
             f"`meme` · `roast <target>` · `8ball <q>` · `deadchat`\n"
-            f"`poll <q> | opt1 | opt2` · `remind <time> <msg>` · `snipe`\n"
+            f"`poll <q> | opt1 | opt2` · `remind <time> <msg>` · `snipe` · `esnipe`\n"
             f"`afk [reason]` · `topic` · `coinflip` · `dice [sides]` · `calc <expr>`\n"
             f"`urban <term>` · `firstmessage [@member]`\n"
             f"`hug/slap/bite/punch @member` · `say/announce/pingrole`")
@@ -154,6 +159,7 @@ class Info(commands.Cog):
         e.add_field(name="🖼️ Images & Media", inline=False, value=
             f"`avatar [@member]` · `/banner [@member]` · `servericon`\n"
             f"`quote` *(prefix only — reply to a message)*\n"
+            f"`steal <emoji> [name]` — steal an emoji from another server\n"
             f"React 🔖 to any message to bookmark it · `mybookmarks`")
 
         e.add_field(name="⭐ Starboard", inline=False, value=

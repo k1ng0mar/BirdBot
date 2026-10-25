@@ -21,8 +21,9 @@ DEFAULT_COOLDOWNS = {
 }
 
 # In-memory stores
-cooldown_tracker: dict[tuple, datetime]   = {}
-snipe_cache:      dict[int, list[dict]]   = defaultdict(list)
+cooldown_tracker:   dict[tuple, datetime]   = {}
+snipe_cache:        dict[int, list[dict]]   = defaultdict(list)
+edit_snipe_cache:   dict[int, list[dict]]   = defaultdict(list)
 
 # ── Duration ──────────────────────────────────────────────────
 def parse_duration(text: str) -> Optional[timedelta]:

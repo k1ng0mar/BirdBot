@@ -38,6 +38,8 @@ load_dotenv()
 TOKEN  = os.getenv("TOKEN")
 PREFIX = os.getenv("PREFIX", "?")
 DB     = "bot.db"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+AI_CHAT_CHANNEL = os.getenv("AI_CHAT_CHANNEL", "ai-chat").lower()
 
 # ── Per-guild prefix ──────────────────────────────────────────
 async def get_prefix(bot, message):
@@ -209,6 +211,9 @@ class Bird(commands.Bot):
         self.prefix_cache:  dict[int, str]   = {}
         self.join_tracker:  dict[int, list]  = {}
 
+    def get_groq_key(self) -> str:
+        return GROQ_API_KEY
+
     async def setup_hook(self):
         await init_db()
         cogs = [
@@ -219,6 +224,7 @@ class Bird(commands.Bot):
             "cogs.info",
             "cogs.automod",
             "cogs.triggers",
+            "cogs.ai",
             "cogs.events",
         ]
         for cog in cogs:

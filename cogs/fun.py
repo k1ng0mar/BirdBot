@@ -14,10 +14,55 @@ from discord import app_commands
 from discord.ext import commands, tasks
 
 from cogs.utils import (
-    DB, get_setting, snipe_cache,
+    DB, get_setting, snipe_cache, edit_snipe_cache,
     check_cooldown, set_cooldown_ts,
     parse_duration
 )
+
+# ── Animal pics (random image APIs) ─────────────────────────
+ANIMAL_APIS = {
+    "cat":     ("https://api.thecatapi.com/v1/images/search", "url",          "🐱 Cat",     0xFFAA55),
+    "dog":     ("https://dog.ceo/api/breeds/image/random",    "message",      "🐶 Dog",     0xC68642),
+    "fox":     ("https://randomfox.ca/floof/",                "image",        "🦊 Fox",     0xFF6B00),
+    "duck":    ("https://random-d.uk/api/random",             "url",          "🦆 Duck",    0x70C8A0),
+    "panda":   ("https://some-random-api.com/animal/panda",   "image",        "🐼 Panda",   0x333333),
+    "bunny":   ("https://api.bunnies.io/v2/loop/random/?media=gif,png", "media.gif", "🐰 Bunny", 0xFFCCCC),
+    "koala":   ("https://some-random-api.com/animal/koala",   "image",        "🐨 Koala",   0x8B7355),
+    "bird":    ("https://some-random-api.com/animal/bird",    "image",        "🐦 Bird",    0x5B9BD5),
+    "hamster": ("https://some-random-api.com/animal/hamster", "image",        "🐹 Hamster", 0xFFB347),
+    "raccoon": ("https://some-random-api.com/animal/raccoon", "image",        "🦝 Raccoon", 0x888888),
+}
+
+
+async def fetch_animal(animal: str):
+    """Fetch a random image URL for an animal, or None."""
+    import json as _json
+    url, path, *_ = ANIMAL_APIS[animal]
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.get(url, timeout=aiohttp.ClientTimeout(total=8)) as r:
+                if r.status != 200:
+                    return None
+                data = await r.json()
+        for key in path.split("."):
+            if isinstance(data, list):
+                data = data[0]
+            data = data[key]
+        return str(data)
+    except Exception as ex:
+        print(f"Animal fetch [{animal}]: {ex}")
+        return None
+
+
+async def send_animal(send_fn, animal: str):
+    _, _, label, color = ANIMAL_APIS[animal]
+    img = await fetch_animal(animal)
+    if not img:
+        await send_fn(f"Couldn't fetch a {animal} right now, try again 😔")
+        return
+    e = discord.Embed(title=label, color=color)
+    e.set_image(url=img)
+    await send_fn(embed=e)
 
 # ── Roasts (static, no AI needed) ─────────────────────────────────
 ROASTS = [
@@ -366,6 +411,73 @@ class Fun(commands.Cog):
     async def kick_fun(self, i: discord.Interaction, member: discord.Member):
         await i.response.send_message(embed=self._gif_embed("kick", i.user, member))
 
+    # ── Animal pics ───────────────────────────────────────────
+    @app_commands.command(name="cat",     description="Random cat pic 🐱")
+    async def slash_cat(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "cat")
+
+    @app_commands.command(name="dog",     description="Random dog pic 🐶")
+    async def slash_dog(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "dog")
+
+    @app_commands.command(name="fox",     description="Random fox pic 🦊")
+    async def slash_fox(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "fox")
+
+    @app_commands.command(name="duck",    description="Random duck pic 🦆")
+    async def slash_duck(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "duck")
+
+    @app_commands.command(name="panda",   description="Random panda pic 🐼")
+    async def slash_panda(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "panda")
+
+    @app_commands.command(name="bunny",   description="Random bunny pic 🐰")
+    async def slash_bunny(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "bunny")
+
+    @app_commands.command(name="koala",   description="Random koala pic 🐨")
+    async def slash_koala(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "koala")
+
+    @app_commands.command(name="bird",    description="Random bird pic 🐦")
+    async def slash_bird(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "bird")
+
+    @app_commands.command(name="hamster", description="Random hamster pic 🐹")
+    async def slash_hamster(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "hamster")
+
+    @app_commands.command(name="raccoon", description="Random raccoon pic 🦝")
+    async def slash_raccoon(self, i: discord.Interaction):
+        await i.response.defer(); await send_animal(i.followup.send, "raccoon")
+
+    # ── Steal emoji ──────────────────────────────────────────
+    @app_commands.command(name="steal", description="Steal an emoji from another server")
+    @app_commands.default_permissions(manage_emojis=True)
+    @app_commands.describe(emoji="Paste the custom emoji here", name="Name for it (optional)")
+    async def slash_steal(self, i: discord.Interaction, emoji: str, name: str = None):
+        await i.response.defer()
+        import re
+        match = re.search(r'<a?:(\w+):(\d+)>', emoji)
+        if not match:
+            await i.followup.send("❌ That doesn't look like a custom emoji.", ephemeral=True); return
+        emoji_name = name or match.group(1)
+        emoji_id   = match.group(2)
+        animated   = emoji.startswith("<a:")
+        ext        = "gif" if animated else "png"
+        url        = f"https://cdn.discordapp.com/emojis/{emoji_id}.{ext}"
+        async with aiohttp.ClientSession() as s:
+            async with s.get(url) as r:
+                if r.status != 200:
+                    await i.followup.send("❌ Couldn't fetch that emoji.", ephemeral=True); return
+                image_data = await r.read()
+        try:
+            new_emoji = await i.guild.create_custom_emoji(name=emoji_name, image=image_data)
+            await i.followup.send(f"✅ Stolen! {new_emoji} `:{new_emoji.name}:`")
+        except Exception as ex:
+            await i.followup.send(f"❌ Failed: {ex}", ephemeral=True)
+
     # ── Avatar / banner ───────────────────────────────────────
     @app_commands.command(name="avatar", description="Get someone's avatar")
     async def slash_avatar(self, i: discord.Interaction, member: discord.Member = None):
@@ -409,6 +521,28 @@ class Fun(commands.Cog):
         await i.response.send_message(
             "⚠️ Use `?quote` as a prefix command by replying to a message.",
             ephemeral=True)
+
+    # ── Edit snipe ─────────────────────────────────────────────
+    @app_commands.command(name="esnipe", description="Show recently edited messages (last 12h)")
+    async def slash_esnipe(self, i: discord.Interaction):
+        from datetime import timedelta
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=12)
+        cache = [e for e in edit_snipe_cache.get(i.channel.id, []) if e["time"] > cutoff]
+        if not cache:
+            await i.response.send_message("No edits sniped in the last 12 hours ✏️", ephemeral=True)
+            return
+        embeds = []
+        for idx, entry in enumerate(cache[:3], 1):
+            ts = entry["time"]
+            rel = f"<t:{int(ts.timestamp())}:R>"
+            e = discord.Embed(color=0xFFAA00, timestamp=ts)
+            e.set_author(name=entry["author"], icon_url=entry["avatar"])
+            e.add_field(name="Before", value=(entry["before"][:500] or "*empty*"), inline=False)
+            e.add_field(name="After", value=(entry["after"][:500] or "*empty*"), inline=False)
+            e.add_field(name="Jump", value=f"[Go to message]({entry['jump']})")
+            e.set_footer(text=f"Edited {rel} · {idx}/{min(len(cache), 3)}")
+            embeds.append(e)
+        await i.response.send_message(embeds=embeds)
 
     # ── Utility fun ───────────────────────────────────────────
     @app_commands.command(name="coinflip", description="Flip a coin")

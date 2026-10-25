@@ -8,7 +8,7 @@ import aiosqlite
 import discord
 from discord.ext import commands
 
-from cogs.utils import DB, get_setting, snipe_cache
+from cogs.utils import DB, get_setting, snipe_cache, edit_snipe_cache
 
 class Events(commands.Cog):
     def __init__(self, bot):
@@ -165,6 +165,22 @@ class Events(commands.Cog):
             return
         if before.content == after.content:
             return
+
+        # Store for esnipe, keep up to 3, expire after 12h
+        from datetime import timedelta
+        entry = {
+            "before": before.content or "",
+            "after":  after.content  or "",
+            "author": before.author.display_name,
+            "avatar": str(before.author.display_avatar.url),
+            "time":   datetime.now(timezone.utc),
+            "jump":   after.jump_url,
+        }
+        cache = edit_snipe_cache[before.channel.id]
+        cache.insert(0, entry)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=12)
+        edit_snipe_cache[before.channel.id] = [e for e in cache if e["time"] > cutoff][:3]
+
         e = discord.Embed(title="✏️ Message Edited", color=0xFFAA00,
                           timestamp=datetime.now(timezone.utc))
         e.set_author(name=str(before.author),

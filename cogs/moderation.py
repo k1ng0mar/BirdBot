@@ -456,6 +456,27 @@ class Moderation(commands.Cog):
             description=f"⏱️ Slowmode → **{seconds}s**" if seconds else "⏱️ Slowmode disabled.",
             color=0x57F287))
 
+    # ── Slash: unban ─────────────────────────────────────────
+    @app_commands.command(name="unban", description="Unban a user by ID")
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.describe(user_id="User ID to unban")
+    async def slash_unban(self, i: discord.Interaction, user_id: str, reason: str = None):
+        await i.response.defer()
+        try:
+            user = await self.bot.fetch_user(int(user_id))
+        except (ValueError, discord.NotFound):
+            await i.followup.send("❌ User not found.", ephemeral=True); return
+        try:
+            await i.guild.unban(user, reason=reason)
+        except discord.NotFound:
+            await i.followup.send(f"❌ {user} is not banned.", ephemeral=True); return
+        await log_action(self.bot, "Unban", user, i.user, reason, i.guild.id)
+        await try_dm(user, discord.Embed(
+            title="🔓 You have been unbanned", color=0x57F287,
+            description=f"Server: {i.guild.name}"))
+        await i.followup.send(embed=discord.Embed(
+            description=f"🔓 Unbanned **{user}** `{user.id}`.", color=0x57F287))
+
     # ── Slash: lookup ─────────────────────────────────────────
     @app_commands.command(name="lookup", description="Fetch info about any user by ID")
     @app_commands.default_permissions(moderate_members=True)

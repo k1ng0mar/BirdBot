@@ -178,16 +178,16 @@ class Settings(commands.Cog):
             f"✅ `/{command}` cooldown → **{seconds}s**", ephemeral=True)
 
     # ── Command permissions ───────────────────────────────────
-    @app_commands.command(name="setpermission", description="Control who can use a command")
+    @app_commands.command(name="setcommandperms", description="Control who can use a command")
     @app_commands.default_permissions(administrator=True)
     @app_commands.describe(
         command="Command name (no prefix/slash)",
         role="Required role (empty = everyone)",
         silent="Silently ignore unauthorized uses"
     )
-    async def setpermission(self, i: discord.Interaction,
-                            command: str, role: discord.Role = None,
-                            silent: bool = False):
+    async def setcommandperms(self, i: discord.Interaction,
+                              command: str, role: discord.Role = None,
+                              silent: bool = False):
         async with aiosqlite.connect(DB) as db:
             await db.execute(
                 "INSERT OR REPLACE INTO command_perms (guild_id,command,role_id,silent)"
