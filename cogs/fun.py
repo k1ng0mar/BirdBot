@@ -89,28 +89,6 @@ EIGHTBALL = [
     "❌ Don't count on it.",  "❌ Very doubtful.",
     "❌ My sources say no.",  "❌ Outlook not so good.",
 ]
-DEADCHAT_LINES = [
-    "💀 Chat is dead... someone say something pls",
-    "🪦 RIP chat. Died of boredom.",
-    "👀 Hello? Anyone alive out there?",
-    "🦗 *cricket noises intensify*",
-    "📻 ...static...",
-    "🕯️ We gather here today to mourn the loss of conversation...",
-    "😴 Chat fell asleep. Shake it awake!",
-    "🌵 Dry in here. Someone water this chat.",
-]
-TOPICS = [
-    "Would you rather lose your phone or your wallet for a week?",
-    "Hot take: what's the most overrated skill people brag about?",
-    "If you could add one rule to the server what would it be?",
-    "What's a skill you want to learn in the next 6 months?",
-    "Unpopular opinion: go.",
-    "What's something you changed your mind about recently?",
-    "Best thing that happened to you this week?",
-    "If money wasn't a factor what would you work on?",
-    "Most underrated country in the world. Go.",
-    "Rate your productivity today 1–10 and explain.",
-]
 GIF_URLS = {
     "hug":   "https://media.tenor.com/BfWfOXsnfOkAAAAC/hug-anime.gif",
     "slap":  "https://media.tenor.com/u7R5gKgkbEkAAAAC/anime-slap.gif",
@@ -258,15 +236,6 @@ class Fun(commands.Cog):
                 else:
                     await i.followup.send("meme api is down lol")
 
-    @app_commands.command(name="roast", description="Roast someone (lightly)")
-    async def slash_roast(self, i: discord.Interaction, target: str):
-        rem = await check_cooldown(i.guild_id, i.user.id, "roast")
-        if rem > 0:
-            await i.response.send_message(f"⏳ Wait **{rem:.1f}s**.", ephemeral=True); return
-        set_cooldown_ts(i.guild.id, i.user.id, "roast")
-        await i.response.send_message(embed=discord.Embed(
-            description=f"🔥 {random.choice(ROASTS).format(t=target)}", color=0xFF4500))
-
     @app_commands.command(name="8ball", description="Ask the magic 8-ball")
     async def slash_8ball(self, i: discord.Interaction, question: str):
         rem = await check_cooldown(i.guild_id, i.user.id, "8ball")
@@ -341,30 +310,6 @@ class Fun(commands.Cog):
             await db.commit()
         await i.response.send_message(embed=discord.Embed(
             description=f"💤 AFK: {reason or 'No reason'}", color=0x5865F2))
-
-    @app_commands.command(name="deadchat", description="Revive dead chat")
-    async def slash_deadchat(self, i: discord.Interaction):
-        perm_role_id = await get_setting(i.guild.id, 'deadchat_perm_role')
-        if perm_role_id:
-            has = (any(r.id == perm_role_id for r in i.user.roles) or
-                   i.user.guild_permissions.administrator)
-            if not has:
-                role = i.guild.get_role(perm_role_id)
-                await i.response.send_message(
-                    f"❌ Only **{role.name if role else 'a specific role'}** can use this.",
-                    ephemeral=True); return
-        rem = await check_cooldown(i.guild_id, i.user.id, "deadchat")
-        if rem > 0:
-            m, s = divmod(int(rem), 60)
-            await i.response.send_message(
-                f"⏳ Cooldown: **{'%dm %ds'%(m,s) if m else '%ds'%s}**",
-                ephemeral=True); return
-        set_cooldown_ts(i.guild_id, i.user.id, "deadchat")
-        ping_id = await get_setting(i.guild.id, 'deadchat_role_id')
-        content = (f"<@&{ping_id}> " if ping_id else "") + random.choice(DEADCHAT_LINES)
-        await i.response.send_message(
-            embed=discord.Embed(description=content, color=0x5865F2),
-            allowed_mentions=discord.AllowedMentions.all())
 
     # ── Announcement commands ─────────────────────────────────
     @app_commands.command(name="say", description="Make the bot say something")
@@ -607,11 +552,6 @@ class Fun(commands.Cog):
         e.set_footer(text=f"👍 {thumbs_up}  👎 {thumbs_down}")
         await i.followup.send(embed=e)
 
-    @app_commands.command(name="topic", description="Post a random conversation starter")
-    async def slash_topic(self, i: discord.Interaction):
-        await i.response.send_message(embed=discord.Embed(
-            description=f"💬 {random.choice(TOPICS)}", color=0x5865F2))
-
     @app_commands.command(name="firstmessage",
                           description="Link to a member's first message in this channel")
     async def slash_firstmessage(self, i: discord.Interaction,
@@ -731,15 +671,6 @@ class Fun(commands.Cog):
                     e.set_image(url=data["url"])
                     await ctx.send(embed=e)
 
-    @commands.command(name="roast")
-    async def prefix_roast(self, ctx: commands.Context, *, target: str):
-        rem = await check_cooldown(ctx.guild.id, ctx.author.id, "roast")
-        if rem > 0:
-            await ctx.reply(f"⏳ Wait **{rem:.1f}s**."); return
-        set_cooldown_ts(ctx.guild.id, ctx.author.id, "roast")
-        await ctx.send(embed=discord.Embed(
-            description=f"🔥 {random.choice(ROASTS).format(t=target)}", color=0xFF4500))
-
     @commands.command(name="8ball")
     async def prefix_8ball(self, ctx: commands.Context, *, question: str):
         e = discord.Embed(color=0x5865F2)
@@ -802,24 +733,6 @@ class Fun(commands.Cog):
             await db.commit()
         await ctx.reply(embed=discord.Embed(
             description=f"💤 AFK: {reason or 'No reason'}", color=0x5865F2))
-
-    @commands.command(name="deadchat")
-    async def prefix_deadchat(self, ctx: commands.Context):
-        perm_role_id = await get_setting(ctx.guild.id, 'deadchat_perm_role')
-        if perm_role_id:
-            has = (any(r.id == perm_role_id for r in ctx.author.roles) or
-                   ctx.author.guild_permissions.administrator)
-            if not has:
-                await ctx.reply("❌ You can't use deadchat."); return
-        rem = await check_cooldown(ctx.guild.id, ctx.author.id, "deadchat")
-        if rem > 0:
-            m, s = divmod(int(rem), 60)
-            await ctx.reply(f"⏳ Cooldown: **{'%dm %ds'%(m,s) if m else '%ds'%s}**"); return
-        set_cooldown_ts(ctx.guild.id, ctx.author.id, "deadchat")
-        ping_id = await get_setting(ctx.guild.id, 'deadchat_role_id')
-        content = (f"<@&{ping_id}> " if ping_id else "") + random.choice(DEADCHAT_LINES)
-        await ctx.send(embed=discord.Embed(description=content, color=0x5865F2),
-                       allowed_mentions=discord.AllowedMentions.all())
 
     @commands.command(name="say")
     @commands.has_permissions(manage_messages=True)
@@ -947,11 +860,6 @@ class Fun(commands.Cog):
             e.add_field(name="Example", value=f"*{ex}*", inline=False)
         e.set_footer(text=f"👍 {top.get('thumbs_up',0)}  👎 {top.get('thumbs_down',0)}")
         await ctx.send(embed=e)
-
-    @commands.command(name="topic")
-    async def prefix_topic(self, ctx: commands.Context):
-        await ctx.send(embed=discord.Embed(
-            description=f"💬 {random.choice(TOPICS)}", color=0x5865F2))
 
     @commands.command(name="firstmessage")
     async def prefix_firstmessage(self, ctx: commands.Context,
