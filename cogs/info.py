@@ -160,6 +160,7 @@ class Info(commands.Cog):
             f"`avatar [@member]` · `/banner [@member]` · `servericon`\n"
             f"`quote` *(prefix only — reply to a message)*\n"
             f"`steal <emoji> [name]` — steal an emoji from another server\n"
+            f"Animal pics: `cat` `dog` `fox` `duck` `panda` `bunny` `koala` `bird` `hamster` `raccoon`\n"
             f"React 🔖 to any message to bookmark it · `mybookmarks`")
 
         e.add_field(name="⭐ Starboard", inline=False, value=
